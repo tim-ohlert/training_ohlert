@@ -1,0 +1,81 @@
+---
+title: "This is the title"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(readr)
+```
+
+
+# introduction [here's the website for the data](google.com)
+
+
+- read in data
+
+```{r}
+
+BG <- read_csv("~/training_ohlert/BGchem2008data.csv")
+
+
+summary(BG)
+
+
+```
+
+
+
+# Analysis
+
+
+
+
+
+- calculate summary statistics
+
+
+
+```{r}
+nitrate <- mean(BG$NO3)
+nitrite <- mean(BG$NO2)
+amm <- mean(BG$NH4)
+phos <- mean(BG$P)
+
+
+
+
+```
+
+
+- calculate mean redfield ratio
+
+
+```{r}
+ratio <- (nitrate +nitrite + amm)/phos
+
+
+
+```
+
+
+
+- plot redfield ratio
+
+
+
+```{r}
+
+plot(BG$P, BG$NO2 + BG$NO3 + BG$NH4)
+
+
+```
+
+
+
+
+
+
