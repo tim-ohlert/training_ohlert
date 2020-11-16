@@ -1,0 +1,117 @@
+---
+title: "Session 8"
+author: "tim-ohlert"
+date: "11/16/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+##load packages
+```{r, message=FALSE}
+library(tidyr)
+library(dplyr)
+library(readr)
+```
+
+
+
+##Data Sources
+
+###read in the data
+
+
+```{r}
+catch_original <- read_csv("https://knb.ecoinformatics.org/knb/d1/mn/v2/object/df35b.302.1")
+
+
+```
+
+
+
+
+##Clean and Reshape data
+
+###remove unnecessary columns
+
+```{r}
+catch_data <- catch_original %>% 
+  select(-All, -notesRegCode)
+
+head(catch_data)
+
+```
+
+
+
+
+###check column typing
+
+
+```{r}
+catch_clean <- catch_data %>% 
+  mutate(Chinook = ifelse(Chinook == "I",1,Chinook)) %>% 
+  mutate(Chinook = as.numeric(Chinook))
+
+
+
+```
+
+
+###reshape data
+
+```{r}
+catch_long <- catch_clean %>% 
+  pivot_longer(-c(Region, Year), names_to = "species", values_to = "catch")
+```
+
+```{r}
+catch_long <- catch_long %>% 
+  rename(catch_thousands = catch)
+```
+
+
+```{r}
+catch_long <- catch_long %>% 
+  mutate(catch = catch_thousands * 1000) %>% 
+  select(-catch_thousands)
+```
+
+```{r}
+mean_region <- catch_long %>% 
+  group_by(Region) %>% 
+  summarize(catch_mean = mean(catch)) %>% 
+  arrange(catch_mean)
+```
+```{r}
+n_region <- catch_long %>% 
+  group_by(Region) %>% 
+  summarize(n = n())
+```
+
+```{r}
+SSE_catch <- catch_long %>% 
+  filter(region == "SSE")
+```
+
+
+##Join to Regions dataset
+
+```{r}
+region_defs <- read_csv("https://knb.ecoinformatics.org/knb/d1/mn/v2/object/df35b.303.1") %>% 
+  select(code, mgmtArea)
+
+
+```
+
+
+```{r}
+catch_joined <- left_join(catch_long, region_defs, by = c("Region" = "code"))
+```
+
+
+
+
+
