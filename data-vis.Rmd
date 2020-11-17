@@ -52,16 +52,39 @@ annual_esc <- esc %>%
 
 
 
+```{r}
+ggplot(annual_esc, mapping = aes(x=Species, y=escapement, fill = SASAP.Region))+
+  geom_col()
+```
 
 
 
 
 
+```{r}
+kodiak_esc <- annual_esc %>% 
+  filter(SASAP.Region == "Kodiak")
+
+ggplot(kodiak_esc, aes(x = Year, y = escapement, color = Species)) + 
+    geom_line() +
+    geom_point() +
+    ylab("Escapement") +
+    ggtitle("Kodiak Salmon Escapement") +
+    theme_void()
+```
 
 
 
 
 
+```{r}
+locations <- esc %>% 
+  distinct(Location, Latitude, Longitude) %>% 
+  drop_na()
+
+
+datatable(locations)
+```
 
 
 
