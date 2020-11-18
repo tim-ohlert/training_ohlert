@@ -1,0 +1,146 @@
+---
+title: "session-12"
+author: "tim-ohlert"
+date: "11/17/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+## add packages
+
+```{r}
+library(rvest)
+library(readr)
+library(dplyr)
+library(janitor)
+library(ggplot2)
+```
+
+## read in and clean data
+
+```{r}
+webpage <- read_html("https://www.pwrc.usgs.gov/bbl/manual/speclist.cfm")
+
+tbls <- html_nodes(webpage, "table") %>% 
+    html_table(fill = TRUE)
+
+species <- tbls[[1]] %>% 
+    clean_names() %>% 
+    select(alpha_code, common_name) %>% 
+    mutate(alpha_code = tolower(alpha_code))
+
+pred <- read_csv("https://arcticdata.io/metacat/d1/mn/v2/object/urn%3Auuid%3A9ffec04c-7e2d-41dd-9e88-b6c2e8c4375e")
+
+nests <- read_csv("https://arcticdata.io/metacat/d1/mn/v2/object/urn%3Auuid%3A982bd2fc-4edf-4da7-96ef-0d11b853102d")
+
+```
+
+
+
+## Write a function that will translate species codes into common names.
+
+Hint: The fastest way to do this involves adding a column to the data.frame. Your function will have two arguments
+Optional Extra Challenge: For a little extra challenge, try to incorporate an if statement that looks for NA values in the common name field you are adding. What other conditionals might you include to make your function smarter?
+
+```{r}
+#codes_to_species <- function(codes) {
+#  codes <- left_join(codes)
+#  
+#}
+
+
+
+#assign_species_name <- function(df, species){
+#    return_df <- left_join(df, species, by = c("species" = "alpha_code"))
+#    return(return_df)
+#}
+
+
+#x <- merge(pred, species, by = c("species" = "alpha_code"), all.x = TRUE)
+x <- left_join(pred, species, by = c("species" = "alpha_code"))
+
+
+
+```
+
+
+
+
+
+
+##Calculate total number of predators by year and species, and plot the result.
+
+```{r}
+
+pred_yr_sp <- x %>% 
+  group_by(year, common_name) %>% 
+  summarize(pred_sum = sum(count)) %>% 
+  filter(common_name != "NA")
+
+ggplot(pred_yr_sp, aes(year, pred_sum, color = common_name))+
+  geom_point()+
+  geom_line()+
+  theme_minimal()
+
+```
+
+
+
+
+##Calculate total number of eggs predated by year and species.
+
+```{r}
+
+y <- left_join(nests, species, by = c("species" = "alpha_code"))
+
+egg_yr_sp <- y %>% 
+    group_by(year, common_name) %>% 
+    summarise(eggs_predated = sum(number_eggs_predated)) %>% 
+    filter(common_name != "NA")
+
+ggplot(egg_yr_sp, aes(year, eggs_predated, color = common_name))+
+  geom_point()+
+  geom_line()+
+  theme_minimal()
+
+```
+
+
+
+
+
+##Calculate total number of predators by year, join to summarized egg predation table, and plot the result.
+
+
+
+```{r}
+
+pred_yr <- x %>% 
+  group_by(year) %>% 
+  summarize(pred_sum = sum(count,na.rm=TRUE))
+
+
+egg_yr <- y %>% 
+  group_by(year) %>% 
+  summarize(eggs_predated = sum(number_eggs_predated, na.rm = TRUE))
+
+
+ggplot(pred_yr, aes(year, pred_sum))+
+  geom_point(color = "black")+
+  geom_line(color = "black")+
+  geom_point(data=egg_yr, aes(year, eggs_predated), color = "red")+
+  geom_line(data=egg_yr, aes(year, eggs_predated), color = "red")+
+  theme_minimal()
+
+
+
+```
+
+
+
+
+
